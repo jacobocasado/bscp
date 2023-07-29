@@ -8,7 +8,7 @@ The good thing about JWTs is that **all the session information data is stored i
 # JWT format
 A JWT consists of **3 parts, always 3 parts, separated by a dot.** These parts are the **header, the payload and the signature. This is an example of JWT:**
 
-![[labs/imgs/jwt_structure.png]]
+![](labs/imgs/jwt_structure.png)
 
 The **header and payload fields (the two first ones)** of a JWT are just **base64 url-encoded JSON objects**. 
 
@@ -40,7 +40,7 @@ Obviously, JWTs are made to be flexible, and allow developers to decide what imp
 Other thing that is important is that tokens are signed, but this means that they are key-dependant. ¿What is the key is disclosed or weak? If this key is leaked in some way, or can be guessed or brute-forced, an attacker can generate a valid signature for any arbitrary token, compromising the entire mechanism.
 
 # How to manage JWTs in Burp Suite
-Please refer to [[jwt_extension_installation_and_usage]] for this section.
+Please refer to [jwt_extension_installation_and_usage](jwt_extension_installation_and_usage.md) for this section.
 
 # Exploting flawed JWT signature verification
 
@@ -59,7 +59,7 @@ JWT libraries often provide one method for verifying token and another that just
 
 Developers might use this libraries in an insecure way, for example, passing incoming tokens into the decode method, and not verifying its signature. The JWT token could be arbitrairly modified and the server would accept it, as it is just decoding it and not verifying it.
 
-Lab that covers this topic: [[labs/no_signature_verification_bypass]]
+Lab that covers this topic: [labs/no_signature_verification_bypass](labs/no_signature_verification_bypass.md)
 
 ## Topic: Accepting null signature tokens
 
@@ -89,7 +89,7 @@ The command to bruteforce a JWT using hashcat is this one (16500 is the mode to 
 
 Once we discover the secret key, we can use this key to craft the signature of the JWT. Inserting the secret key into the JWT Burp Suite plugin automatically calcules the signature for us.
 
-Lab that covers this topic: [[labs/weak_signing_key_cracking_and_crafting]]
+Lab that covers this topic: [labs/weak_signing_key_cracking_and_crafting](labs/weak_signing_key_cracking_and_crafting.md)
 
 # JWT header parameter injections
 According to the [RFC 7515](https://datatracker.ietf.org/doc/html/rfc7515), the "alg" header parameter is the only header which is mandatory.
@@ -108,7 +108,7 @@ Servers **should only use a whitelist of public keys to verify JWT** signatures.
 
 Therefore, the attack path would be to sign a modified JWT using our own RSA private key, and then embed our **RSA public key in the `jwk` header. If the server does not verify the RSA key that is introduced and compares it with the whitelist, it will just see if the public key decrypts the JWT, and, as we signed it with the private key that matches the public key, the signing will be verified.**
 
-Lab that covers this topic: [[labs/jwk_header_bypass]]
+Lab that covers this topic: [labs/jwk_header_bypass](labs/jwk_header_bypass.md)
 
 ## Injecting self/signed JWTs via the "jku" parameter
 This is similar to the previous injection, but instead of embedding public keys into this parameter, some servers are vulnerable to the `jku` parameter.
@@ -116,7 +116,7 @@ The `jku` parameter is another parameter that allows to specify a URL containing
 
 JWK Sets like this are sometimes exposed publicly via a standard endpoint, such as `/.well-known/jwks.json`.
 
-Lab that covers this topic: [[labs/jku_header_bypass]]
+Lab that covers this topic: [labs/jku_header_bypass](labs/jku_header_bypass.md)
 
 # JWT Authentication bypass via `kid` header path traversal
 
@@ -127,7 +127,7 @@ This parameter can be also vulnerable to **directory traversal**, and an attacke
 
 What is very common is just signing the token with an empty string, as it is still a valid token (it is just not signed). This is done by making the `kid` parameter have the value of `/dev/null` in Linux, for example. Therefore, the server will look at an empty string and will verify the signature with an empty string (therefore, not verifying it at all)
 
-Lab that covers this topic: [[labs/kid_header_bypass]]
+Lab that covers this topic: [labs/kid_header_bypass](labs/kid_header_bypass.md)
 
 # Other interesting JWT parameters
 There are other JWT headers that can be interesting, although they are not covered in the lab.
@@ -135,7 +135,7 @@ There are other JWT headers that can be interesting, although they are not cover
 - The first one is the `cty`, or content type. This is to declare a media type for the content in the JWT payload. As we can see this is not close to session management, but other JWT usages.
 If you have find a way to bypass signature verification, and change the `cty` header to specify `application/x-java-serialized-object` instead `text-xml`, you can inject code, or something similar.
 
-- `x5c` (X.509 Certificate Chain) - Sometimes used to pass the X.509 public key certificate or certificate chain of the key used to digitally sign the JWT. This header parameter can be used to inject self-signed certificates, similar to the [[https://portswigger.net/web-security/jwt#injecting-self-signed-jwts-via-the-jwk-parameter]] attacks discussed above. Due to the complexity of the X.509 format and its extensions, parsing these certificates can also introduce vulnerabilities. Details of these attacks are beyond the scope of these materials, but for more details, check out [CVE-2017-2800](https://talosintelligence.com/vulnerability_reports/TALOS-2017-0293) and [CVE-2018-2633](https://mbechler.github.io/2018/01/20/Java-CVE-2018-2633)
+- `x5c` (X.509 Certificate Chain) - Sometimes used to pass the X.509 public key certificate or certificate chain of the key used to digitally sign the JWT. This header parameter can be used to inject self-signed certificates, similar to the [https://portswigger.net/web-security/jwt > injecting-self-signed-jwts-via-the-jwk-parameter](https://portswigger.net/web-security/jwt#injecting-self-signed-jwts-via-the-jwk-parameter) attacks discussed above. Due to the complexity of the X.509 format and its extensions, parsing these certificates can also introduce vulnerabilities. Details of these attacks are beyond the scope of these materials, but for more details, check out [CVE-2017-2800](https://talosintelligence.com/vulnerability_reports/TALOS-2017-0293) and [CVE-2018-2633](https://mbechler.github.io/2018/01/20/Java-CVE-2018-2633)
 
 # JWT algorithm confusion
 We have talked about a lot of the headers of JWT and performed an attack for nearly all of them, but... What if you change the header that specifies the type of algorithm that is used to sign the token, and change it for another algorithm? This is known as an algorithm confusion attack.
@@ -178,9 +178,9 @@ I know this sounds a bit complicated to understand, but the idea is that, someti
 > Note: The public key you use to sign the token must be **absolutely identical to the public key stored on the server**. This includes using the **same format** (such as X.509 PEM) and **preserving any non-printing characters like newlines.** In practice, you may need to experiment with different formatting in order for this attack to work.
 
 This attack is a bit larger than the others explained as requires some preparation. Here are the high-level steps:
-1. [[https://portswigger.net/web-security/jwt/algorithm-confusion#step-1-obtain-the-server-s-public-key]]
-2. [[https://portswigger.net/web-security/jwt/algorithm-confusion#step-2-convert-the-public-key-to-a-suitable-format]]
-3. [[https://portswigger.net/web-security/jwt/algorithm-confusion#step-3-modify-your-jwt]] with a modified payload and the `alg` header set to `HS256`.
-4. [[https://portswigger.net/web-security/jwt/algorithm-confusion#step-4-sign-the-jwt-using-the-public-key]], using the public key as the secret.
+1. [https://portswigger.net/web-security/jwt/algorithm-confusion > step-1-obtain-the-server-s-public-key](https://portswigger.net/web-security/jwt/algorithm-confusion#step-1-obtain-the-server-s-public-key)
+2. [https://portswigger.net/web-security/jwt/algorithm-confusion > step-2-convert-the-public-key-to-a-suitable-format](https://portswigger.net/web-security/jwt/algorithm-confusion#step-2-convert-the-public-key-to-a-suitable-format)
+3. [https://portswigger.net/web-security/jwt/algorithm-confusion > step-3-modify-your-jwt](https://portswigger.net/web-security/jwt/algorithm-confusion#step-3-modify-your-jwt) with a modified payload and the `alg` header set to `HS256`.
+4. [https://portswigger.net/web-security/jwt/algorithm-confusion > step-4-sign-the-jwt-using-the-public-key](https://portswigger.net/web-security/jwt/algorithm-confusion#step-4-sign-the-jwt-using-the-public-key), using the public key as the secret.
 
-These steps are covered in [[labs/algorithm_confussion_bypass]]
+These steps are covered in [labs/algorithm_confussion_bypass](labs/algorithm_confussion_bypass.md)
