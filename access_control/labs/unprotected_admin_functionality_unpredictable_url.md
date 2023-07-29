@@ -3,8 +3,8 @@ This lab is the continuation of [[unprotected_admin_functionality]] which adds a
 
 # Writeup
 Visit the website and CTRL+U to see the source code of the appliaction. There is a JavaScript code that is checking if we are admin, and if we are admin, it inserts the bar to visit the admin panel. Therefore, in this code, there is a **leaked URL to the admin panel:**
-![[unprotected_admin_functionality_unpredictable_url.png]]
+![[imgs/unprotected_admin_functionality_unpredictable_url.png]]
 
 Visiting this endpoint leads us to the admin panel and we can delete the user carlos:
-![[unprotected_admin_functionality_unpredictable_url-1.png]]
+![[imgs/unprotected_admin_functionality_unpredictable_url-1.png]]
 

@@ -40,7 +40,7 @@ This might in fact be accessible by any user, not only administrative users who 
 
 **Even if the URL isn't disclosed anywhere, an attacker may be able to use a wordlist to brute-force the location of the sensitive functionality.**
 
-Lab that covers this topic: [[unprotected_admin_functionality]]
+Lab that covers this topic: [[labs/unprotected_admin_functionality]]
 
 #### Unprotected admin functionality with non-predictable URL
 In some cases, sensitive functionality is not robustly protected, but does have a non-predictable URL. This concept is called **security by obscurity, as hiding this functionality (obscurity) does not provide access control since users might still discover the obfuscated URL in various ways.*
@@ -49,7 +49,7 @@ For example, imagine that an application hosts administrative functions at this 
 `https://insecure-website.com/administrator-panel-yb556`
 
 This might not be guessable by an attacker, but **the application might leak this URL to the users and that's it.** Examining the code of the application can be another vector to find these obscure endpoints.
-Lab that covers this topic: [[unprotected_admin_functionality_unpredictable_url]]
+Lab that covers this topic: [[labs/unprotected_admin_functionality_unpredictable_url]]
 
 ### Parameter-based access control methods
 In this case, there is an applied access control method. In some cases, applications check the user's right at login and then store this **information in an user-controllable location, as a cookie, request field, header, or preset query string parameter.**
@@ -62,12 +62,12 @@ One of the basic examples is applying a parameter-based access control in a URL:
 `https://insecure-website.com/login/home.jsp?role=1`
 
 Sounds familiar to you?
-Lab that covers this topic: [[user_role_controlled_by_request_parameter]]
+Lab that covers this topic: [[labs/user_role_controlled_by_request_parameter]]
 
 #### Modifying the user role in the profile
 Sometimes, the user role is well limited but it can be modified without authorization (or bypassing it) in the profile. Always look for the endpoint to change privileges, as, if it is weak, it will **literally break all the access controls as you can give any privilege you want.**
 
-Lab that covers this topic: [[user_role_modification_in_user_profile]]
+Lab that covers this topic: [[labs/user_role_modification_in_user_profile]]
 
 ### Platform misconfiguration broken access controls
 Some applications enforce access controls at the **platform layer**, by restricting access to specific URLs and HTTP methods based on the user's role. 
@@ -93,7 +93,7 @@ POST /admin/deleteUser HTTP/1.1
 
 Both do the same action if the header is accepted by the application, but one bypasses the access control :)
 
-Lab that covers this topic: [[url_rewrite_bypass]]
+Lab that covers this topic: [[labs/url_rewrite_bypass]]
 
 #### HTTP methods access control bypass
 In the last case, we added a header that overwrites the URL. But an alternative attack can arise in relation to the **HTTP method** used in the request. Some websites are tolerant to alternate HTTP request methods when performing an action.
@@ -111,11 +111,11 @@ There are some times that the user ID is unpredictable, but we know that the par
 
 But, sometimes, this GUID can be obtained in the source code of the app, or in another section of the app that uses the GUID for other things and can be visualized. The idea is to search for the GUID in another section, and then, once the GUID is obtained, craft the request just as before.
 
-Lab that covers this topic: [[user_role_controlled_by_request_parameter_unpredictable_parameter]]
+Lab that covers this topic: [[labs/user_role_controlled_by_request_parameter_unpredictable_parameter]]
 
 #### Simple query string parameter, with data leakage in redirect
 Sometimes, the application detects if the user is not allowed to access the resource and performs a redirect to the login page. **But in this redirect, some information can be leaked which can be useful to attack the user, so the attack is still valid. **
 
-Lab that covers this topic: [[user_role_controlled_by_request_parameter_redirect_leakage]]
+Lab that covers this topic: [[labs/user_role_controlled_by_request_parameter_redirect_leakage]]
 
 ### 
