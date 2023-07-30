@@ -14,7 +14,7 @@ First, let's login as the user `wiener:peter`, as always. This gives us a valid 
 This JWT is indeed signed:
 ![](imgs/weak_signing_key-1.png)
 
-Let's copy the raw JWT into a file and inserting it into hashcat using the given wordlist. The hashcat command is the following, also mentioned in [../main > Bruteforcing JWT signature using Hashcat](../main#Bruteforcing%20JWT%20signature%20using%20Hashcat):
+Let's copy the raw JWT into a file and inserting it into hashcat using the given wordlist. The hashcat command is the following, also mentioned in [../main > Bruteforcing JWT signature using Hashcat](../jwts.md#Bruteforcing%20JWT%20signature%20using%20Hashcat):
 `hashcat -a 0 -m 16500 <jwt> <wordlist>`
 
 After a minute, we get the secret:

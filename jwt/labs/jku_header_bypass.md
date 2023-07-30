@@ -1,5 +1,5 @@
 # Lab description
-This lab covers the [../main > Injecting self/signed JWTs via the "jku" parameter](../main#Injecting%20self/signed%20JWTs%20via%20the%20"jku"%20parameter) section.
+This lab covers the [../main > Injecting self/signed JWTs via the "jku" parameter](../jwts.md#Injecting%20self/signed%20JWTs%20via%20the%20"jku"%20parameter) section.
 
 The idea is to craft a endpoint that contains a JSON with the public key that is used to verify the JWT, and resign the token with its corresponding private key. Then, adding the `jwu` extension to the JWT, the server will try to fetch from our server the public key, retrieve it, and verify if the sign is valid. This happens because **the server does not check the source of the jws, and trusts it.**
 

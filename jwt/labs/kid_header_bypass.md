@@ -1,5 +1,5 @@
 # Lab description
-This lab covers the topic of [../main > JWT Authentication bypass via `kid` header path traversal](../main#JWT%20Authentication%20bypass%20via%20`kid`%20header%20path%20traversal).
+This lab covers the topic of [../main > JWT Authentication bypass via `kid` header path traversal](../jwts.md#JWT%20Authentication%20bypass%20via%20`kid`%20header%20path%20traversal).
 
 The idea is that the server uses the `kid` optional parameter of the token to look for a local file containing a key that will be used to validate the signature.
 We are going to:

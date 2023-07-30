@@ -1,3 +1,6 @@
+
+# What is access control
+
 Access control is the same word as **authorization**. As an easy to understand phrase, it is the application of contrainsts on **who or what can perform actions or access resources they have requested**. 
 
 In the context of web applications, access control depends on authentication and session management, as, one is authenticated, and then, its rights are based depending on the username that has been authenticated.
@@ -99,23 +102,104 @@ Lab that covers this topic: [labs/url_rewrite_bypass](labs/url_rewrite_bypass.md
 In the last case, we added a header that overwrites the URL. But an alternative attack can arise in relation to the **HTTP method** used in the request. Some websites are tolerant to alternate HTTP request methods when performing an action.
 If an attacker can use another method to perform actions on a unrestricted URL, they can bypass the access control implemented at platform layer.
 
-Lab that covers this topic:
-
-
-
+Lab that covers this topic: [http_method_bypass](labs/http_method_bypass.md)
 
 ## Horizontal privilege escalation
+Horizontal privilege escalation arises when a user is able to **gain access to resources belonging to another user, instead of their own resources. But, as it is horizontal, it means that the user that the attacker tries to get can have the same (or less) privileges than the real user. This is the difference from vertical (scale) to horizontal (target other users)*.
 
-#### Simple query string parameter, with unpredictable user IDs
+### Horizontal privesc changing user ID in request parameter
+Horizontal privilege escalation attacks may use similar types of exploit methods to vertical privilege escalation. For example, a user might ordinarily access their own account page using a URL like the following:
+
+`https://insecure-website.com/myaccount?id=123`
+
+Now, if an attacker modifies the `id` parameter value to that of another user, then the attacker might gain access to another user's account page, with associated data and functions.
+
+Lab that covers this topic: [horizontal_privesc_user_id_in_request](labs/horizontal_privesc_user_id_in_request.md)
+
+### Horizontal privesc changing unpredictable user ID in request parameter
 There are some times that the user ID is unpredictable, but we know that the parameter is exploitable. For example, instead of attaching the name of the user, like in the last case, it can be a GUID. Therefore, it can be hard to detect/craft the GUID of another user. 
 
 But, sometimes, this GUID can be obtained in the source code of the app, or in another section of the app that uses the GUID for other things and can be visualized. The idea is to search for the GUID in another section, and then, once the GUID is obtained, craft the request just as before.
 
-Lab that covers this topic: [labs/user_role_controlled_by_request_parameter_unpredictable_parameter](labs/user_role_controlled_by_request_parameter_unpredictable_parameter.md)
+Lab that covers this topic: [labs/horizontal_privesc_unpredictable_user_id_in_request](labs/horizontal_privesc_unpredictable_user_id_in_request.md)
 
-#### Simple query string parameter, with data leakage in redirect
-Sometimes, the application detects if the user is not allowed to access the resource and performs a redirect to the login page. **But in this redirect, some information can be leaked which can be useful to attack the user, so the attack is still valid. **
+### Horizontal privesc via user ID controlled by request with data leakage in redirect
+Sometimes, the application detects if the user is not allowed to access the resource and performs a redirect to the login page. **But in this redirect, the user information is leaked, so inspecting the 302 response, we can see the user information in the body (leaked), so the attack is still valid. ** 
 
 Lab that covers this topic: [labs/user_role_controlled_by_request_parameter_redirect_leakage](labs/user_role_controlled_by_request_parameter_redirect_leakage.md)
 
-### 
+## Horizontal to vertical privilege escalation
+Most of the times, an horizontal privilege escalation attack can be turned into a vertical privilege escalation, by compromising a more privileged user. Using the techniques of horizontal privesc targeting an admin, we can get administrative privileges.
+
+For example, an attacker might be able to gain access to another user's account page using the parameter tampering technique already described for horizontal privilege escalation:
+
+`https://insecure-website.com/myaccount?id=456`
+
+If the target user is an application administrator, then the attacker will gain access to an administrative account page. This page might disclose the administrator's password or provide a means of changing it, or might provide direct access to privileged functionality.
+
+Lab that covers this topic: [horizontal_to_vertical_privesc](labs/horizontal_to_vertical_privesc.md)
+
+## IDOR (Insecure Direct Object References)
+
+### What are IDOR?
+IDORs are a **specific type of access control vulnerability that arises when an application uses user-supplied input to access objects directly.**
+
+IDOR was a name that appeared and was popular in OWASP 2007 Top Ten, and it is a good example of how access controls can be bypassed and circumvented.
+IDOR vulnerabilities are often related to **horizontal privesc, but they can lead to vertical privesc, too, as we saw before.**
+
+### IDOR examples
+There are a few examples of IDOR, let's see the most importants.
+
+### IDOR with direct reference to database objects
+Let's consider a website that uses this URL to access the account of the customers and retrieve information of the database:
+`https://insecure-website.com/customer_account?customer_number=132355`
+
+The customer number is used **directly as the record index in queries that are processed in the backend.** If there are not other controls, or if they are weak, an attacker could modify the `customer_number` parameter and view the records of other customers. This is clearly an horizontal privesc. Again, if the targeted user has higher privileges, the attack can lead to privilege escalation.
+
+### IDOR with direct reference to static files 
+This is the typical IDOR, when resources are located in static files on the server-side filesystem. For example, a chat with diferent conversations at the urls:
+`https://insecure-website.com/static/12144.txt`
+
+An attacker could just modify the filename to retrieve another conversation created by another user.
+
+Lab that cover IDORs: [insecure_direct_object_references](labs/insecure_direct_object_references.md)
+
+## Access control vulnerabilities in multi-step processes
+A lot of web sites implement important functions over a **series of steps.** This is usually done where a variety of user inputs or options need to be captured, or when **the user needs to review and confirm details before performing an action.**
+
+A good example of a multi-step process would be this function to update the user details:
+1. Load form containing details for a specific user.
+2. Submit changes.
+3. Review the changes and confirm.
+
+Maybe, the first step is covered, or some of them, but having a multi-step process means that each of the steps **must be secure. If we find any flaw in any of the steps, we can break the whole process.**
+
+For example, if an application just verifies user input and access on the first step of the three, an attacker could even bypass the first two steps, and go straight to the third step. As there is no verification, the process is completed and the attacker gains access.
+
+Let's see this in a lab: [multi-step_process_access_control_vulns](labs/multi-step_process_access_control_vulns.md)
+
+## Referer-based access control vulnerabilities
+Some websites base its access controls in the `Referer` header submitted in the HTTP request. The `Referer` header is a header to tell the servers the previous page where the request was initiated. For example, if we are in Instagram and we clink a link to Google, the `Referer` header to the first request to Google will indicate `Instagram`, as we come from there.
+
+This can lead to big problems, as this **is a header, so it is user-input.** An user could modify it to bypass access controls.
+
+For example, suppose an application robustly enforces access control over the main administrative page at `/admin`, but for sub-pages such as `/admin/deleteUser` only inspects the `Referer` header. If the `Referer` header contains the main `/admin` URL, then the request is allowed.
+In this situation, since the `Referer` header can be fully controlled by an attacker, they can forge direct requests to sensitive sub-pages, supplying the required `Referer` header, and so gain unauthorized access.
+
+Lab that covers this topic: [access_control_bypass_via_referer_header](labs/access_control_bypass_via_referer_header.md)
+
+## Access control bypass via Location header
+Some web sites enforce access controls over resources based on the user's geographical location. This can apply, for example, to banking applications or media services where state legislation or business restrictions apply. These access controls can often be circumvented by the use of web proxies, VPNs, or manipulation of client-side geolocation mechanisms.
+
+This is similar to [Referer-based access control vulnerabilities](#Referer-based%20access%20control%20vulnerabilities), where modifying this header can lead to bypasses due to the localization.
+
+# How to prevent access control vulnerabilities
+Access control vulnerabilities can generally be prevented by taking a defense-in-depth approach and applying the following principles:
+
+- Never rely on obfuscation alone for access control.
+- Unless a resource is intended to be publicly accessible, deny access by default.
+- Wherever possible, use a single application-wide mechanism for enforcing access controls.
+- At the code level, make it mandatory for developers to declare the access that is allowed for each resource, and deny access by default.
+- Thoroughly audit and test access controls to ensure they are working as designed.
+
+Just ensure all the time, don't take anything for granted and verify, verify, verify.

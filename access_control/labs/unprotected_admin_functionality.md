@@ -1,5 +1,5 @@
 # Lab description
-This lab covers the [../main > Unprotected functionality](../main#Unprotected%20functionality) section.
+This lab covers the [../main > Unprotected functionality](../access_control.md#Unprotected%20functionality) section.
 
 
 # Writeup

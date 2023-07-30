@@ -1,5 +1,5 @@
 # Lab description
-This lab covers the [../main > Injecting self-signed JWTs via the "jwk" parameter](../main#Injecting%20self-signed%20JWTs%20via%20the%20"jwk"%20parameter) section.
+This lab covers the [../main > Injecting self-signed JWTs via the "jwk" parameter](../jwts.md#Injecting%20self-signed%20JWTs%20via%20the%20"jwk"%20parameter) section.
 The idea is that the JWT that the server gives to us has the `jwk` parameter, with a public key. The server **does not check if the public key in this extension comes from a trusted source, and just tries to use it to decrypt the JWT.**
 
 The steps that are going to be performed are:

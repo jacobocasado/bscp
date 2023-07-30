@@ -3,7 +3,7 @@
 
 Link: [this](https://portswigger.net/web-security/jwt/lab-jwt-authentication-bypass-via-unverified-signature)
 
-This lab consists in one of the techniques explained in [../main](../main.md): [../main > Accepting arbitrary signatures](../main#Accepting%20arbitrary%20signatures). 
+This lab consists in one of the techniques explained in [../jwts](../jwts.md): [../main > Accepting arbitrary signatures](../jwts.md#Accepting%20arbitrary%20signatures). 
 This lab uses a JWT-based mechanism to handle sessions, but we know that the server **does not verify the signature of any JWTs that it receives**.
 
 How to solve the lab: Modify the session token to gain access to the admin panel at `/admin`, then delete the user `carlos`.

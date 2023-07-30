@@ -1,5 +1,5 @@
 # Lab description
-This lab is the continuation of [user_role_controlled_by_request_parameter_unpredictable_parameter](user_role_controlled_by_request_parameter_unpredictable_parameter.md). The idea is that now the server performs a redirect, indicating that we do not have the rights required, but **performs a leakage in the redirect body. Inspecting this body and crafting another attack leads us to a privilege escalation.**
+This lab is the continuation of [horizontal_privesc_unpredictable_user_id_in_request](horizontal_privesc_unpredictable_user_id_in_request.md)erver performs a redirect, indicating that we do not have the rights required, but **performs a leakage in the redirect body. Inspecting this body and crafting another attack leads us to a privilege escalation.**
 
 # Writeup
 
