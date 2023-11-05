@@ -35,7 +35,51 @@ If the user visits the URL, the malicious script will trigger, in the **context 
 Nevertheless, this attack is less severe than stored XSS as the attacks need to be embedded in the request that the user performs. In the stored XSS, the payload can be inside the webpage, and the user loads it when rendering the webpage, without the need of adding it in the URL.
 
 This opens the first reflected XSS lab: [reflected_xss_without_encoding](labs/reflected_xss_without_encoding.md).
+The second Reflected XSS lab is regarding most tags and atributes blocked: [reflected_xss_most_tags_and_attributes_blocked](labs/reflected_xss_most_tags_and_attributes_blocked.md)
+The third lab is again about blocking some tags: [reflected_xss_html_all_tags_blocked](labs/reflected_xss_html_all_tags_blocked.md)
 
+Sometimes we do not even need to escape the `attribute` value as that attribute is vulnerable. This happens, for example, if our context is inside an `href` tag, as we can use the `javascript` keyword to execute the script. For example:
+`<a href="javascript:alert(document.domain)">`
+
+### Reflected XSS on canonical link tag
+You might encounter websites that encode angle brackets but still allow you to inject attributes. Sometimes, these injections are possible even within tags that don't usually fire events automatically, such as a canonical tag. You can exploit this behavior using access keys and user interaction on Chrome.
+Access keys allow you to provide keyboard shortcuts that reference a specific element. The `accesskey` attribute allows you to define a letter that, when pressed in combination with other keys (these vary across different platforms), will cause events to fire. In the next lab you can experiment with access keys and exploit a canonical tag. [You can exploit XSS in hidden input fields using a technique invented by PortSwigger Research](https://portswigger.net/research/xss-in-hidden-input-fields).
+
+There is a lab that covers this topic: [reflected_xss_canonical_link_tag](labs/reflected_xss_canonical_link_tag.md)
+
+### Double backslash to avoid escaping single quote characters
+Some applications attempt to prevent input from breaking out of the JavaScript string by escaping any single quote characters with a backslash. A backslash before a character tells the JavaScript parser that the character should be interpreted literally, and not as a special character such as a string terminator. In this situation, applications often make the mistake of failing to escape the backslash character itself. This means that an attacker can use their own backslash character to neutralize the backslash that is added by the application.
+
+For example, suppose that the input:
+`';alert(document.domain)//`
+
+gets converted to:
+`\';alert(document.domain)//`
+
+You can now use the alternative payload:
+`\';alert(document.domain)//`
+
+which gets converted to:
+`\\';alert(document.domain)//`
+
+Here, the first backslash means that the second backslash is interpreted literally, and not as a special character. This means that the quote is now interpreted as a string terminator, and so the attack succeeds.
+
+This is the lab that covers this topic: [reflected_xss_double_escaping](labs/reflected_xss_double_escaping.md)
+
+### Using HTML-encoding to bypass blocking or scaping
+When the XSS context is some existing JavaScript within a quoted tag attribute, such as an event handler, it is possible to make use of HTML-encoding to work around some input filters.
+
+When the browser has parsed out the HTML tags and attributes within a response, it will perform HTML-decoding of tag attribute values before they are processed any further. If the server-side application blocks or sanitizes certain characters that are needed for a successful XSS exploit, you can often bypass the input validation by HTML-encoding those characters.
+
+For example, if the XSS context is as follows:
+`<a href="#" onclick="... var input='controllable data here'; ...">`
+
+and the application blocks or escapes single quote characters, you can use the following payload to break out of the JavaScript string and execute your own script:
+`&apos;-alert(document.domain)-&apos;`
+
+The `&apos;` sequence is an HTML entity representing an apostrophe or single quote. Because the browser HTML-decodes the value of the `onclick` attribute before the JavaScript is interpreted, the entities are decoded as quotes, which become string delimiters, and so the attack succeeds.
+
+There is a lab that covers this topic: 
 ## Stored XSS
 Stored XSS arises when an application receives data, saves it in the application and then renders that data in an unsafe way. Imagine a website with blog posts, that allows users adding comments.
 An attacker could add a JavaScript payload as a comment and the JavaScript code will get rendered in all of the user's browsers that see the comment.
@@ -90,5 +134,107 @@ $(function() { $('#backLink').attr("href",(new URLSearchParams(window.location.s
 This is basically saying: "Hey, modify the value of backLink so its attribute `href` points to the new parameter specified in the URL, exactly the returnURL parameter." This parameter is in the URL, so XSS is here.
 We can see that a new sink is introduced due to this new jQuery library.
 
-An specific lab covers this:
+An specific lab covers this: [dom_xss_jquery_attr_href_location_search](labs/dom_xss_jquery_attr_href_location_search.md)
 
+Another potential sink when jQuery is being used is the selector function: `$()`. This sink is very common, and attacks with this selector and the `location.hash` source are present in a lot of pages.
+The common behavior of using the selector function is to create animations or autoscrolling to particular element on the page. This behavior was often implemented using a `hashchange` event handler like the following:
+`$(window).on('hashchange', function() { var element = $(location.hash); element[0].scrollIntoView(); });`
+
+As the `hash` element is user controllable, an attacker can use this element to inject an XSS payload into the `$()` selector sink. **More recent versions of jQuery patch this vulnerability by preventing from injecting HTML into a selector when the input begins with a hash (`#`) character.** However, is still good to keep looking for this attack in old places.
+
+The lab related to this vulnerability is: [dom_xss_jquery_selector_hashchange](labs/dom_xss_jquery_selector_hashchange.md)
+
+Another framework that can be exploited is **AngularJS**. If AngularJS is used, it may possible to execute JavaScript without angle brackets or events. If using **AngularJS** a website uses `ng-app` attribute on an HTML element, this element will be processed by AngularJS. In that case, **AngularJS** will execute JavaScript code inside double curly braces.
+A lab that covers this is the following: [dom_xss_angularjs_expresion](labs/dom_xss_angularjs_expresion.md)
+
+## DOM XSS combined with reflected and stored data
+Some pure DOM-based vulnerabilities are self-contained within a single page. If a script reads some data from the URL and writes it to a dangerous sink, the vulnerability is completely **client-side**.
+
+However, sources aren't limited to data that is directly exposed by browser and can be also originated from the website, like the **HTML** response from the server. When this happens, the DOM XSS is combined and acts as a **Reflected DOM XSS.**
+In a reflected DOM XSS vulnerability, the server processes data from the request, and echoes the data into the response. The reflected data might be placed into a JavaScript string literal, or a data item within the DOM, such as a form field. A script on the page then processes the reflected data in an unsafe way, ultimately writing it to a dangerous sink.
+An example payload is the following:
+`eval('var data = "reflected string"');`
+
+A lab that covers this topic is the following: [dom_xss_reflected](labs/dom_xss_reflected.md)
+
+Websites may also store data from the server and load that data as **a source** into a sink. In that case, we have a **stored DOM XSS** vulnerability. An example of this situation is when we find something like this:
+`element.innerHTML = comment.author`
+
+A lab that covers this topic is the following: [dom_xss_reflected](labs/dom_xss_reflected.md)
+## Which sinks can lead to DOM-XSS vulnerabilities?
+
+The following are some of the main sinks that can lead to DOM-XSS vulnerabilities:
+
+`document.write() document.writeln() document.domain element.innerHTML element.outerHTML element.insertAdjacentHTML element.onevent`
+
+The following jQuery functions are also sinks that can lead to DOM-XSS vulnerabilities:
+
+`add() after() append() animate() insertAfter() insertBefore() before() html() prepend() replaceAll() replaceWith() wrap() wrapInner() wrapAll() has() constructor() init() index() jQuery.parseHTML() $.parseHTML()`
+
+## XSS into JavaScript
+
+When the XSS context is some existing JavaScript within the response, a wide variety of situations can arise, with different techniques necessary to perform a successful exploit.
+### Terminating the existing script
+In the simplest case, it is possible to simply close the script tag that is enclosing the existing JavaScript, and introduce some new HTML tags that will trigger execution of JavaScript. For example, if the XSS context is as follows:
+
+`<script> ... var input = 'controllable data here'; ... </script>`
+
+then you can use the following payload to break out of the existing JavaScript and execute your own:
+`</script><img src=1 onerror=alert(document.domain)>`
+The reason this works is that the browser first performs HTML parsing to identify the page elements including blocks of script, and only later performs JavaScript parsing to understand and execute the embedded scripts. The above payload leaves the original script broken, with an unterminated string literal. But that doesn't prevent the subsequent script being parsed and executed in the normal way.
+Lab that covers this topic: [xss_into_javascript_escaping_script_tag](labs/xss_into_javascript_escaping_script_tag.md)
+
+### Breaking out of a JavaScript string
+
+In cases where the XSS context is inside a quoted string literal, it is often possible to break out of the string and execute JavaScript directly. It is essential to repair the script following the XSS context, because any syntax errors there will prevent the whole script from executing.
+
+Some useful ways of breaking out of a string literal are:
+`'-alert(document.domain)-' 
+`';alert(document.domain)//``
+
+Lab that covers this topic: [reflected_xss_javascript_string](labs/reflected_xss_javascript_string.md)
+
+### XSS in JavaScript template literals
+
+JavaScript template literals are string literals that allow embedded JavaScript expressions. The embedded expressions are evaluated and are normally concatenated into the surrounding text. Template literals are encapsulated in backticks instead of normal quotation marks, and embedded expressions are identified using the `${...}` syntax.
+
+For example, the following script will print a welcome message that includes the user's display name:
+``document.getElementById('message').innerText = `Welcome, ${user.displayName}.`;``
+
+When the XSS context is into a JavaScript template literal, there is no need to terminate the literal. Instead, you simply need to use the `${...}` syntax to embed a JavaScript expression that will be executed when the literal is processed. For example, if the XSS context is as follows:
+``<script> ... var input = `controllable data here`; ... </script>``
+
+then you can use the following payload to execute JavaScript without terminating the template literal:
+`${alert(document.domain)}`
+
+There is a lab that covers this topic:
+
+
+# Exploiting XSS is not about generating alerts
+A lot of new people think that exploting XSS means generating an alert box, but this is just the best PoC for our tests. In reality, what we want to do is **to execute JavaScript** code in another domain that is not ours, therefore, bypassing the Same Origin Policy as our malicious script is being executed in the another domain.
+
+## Exploiting XSS to steal cookies
+A real usage of XSS is to **steal cookies**. As the script is being executed on other domain, we can extract the cookies of the user that is executing the script. Then, we can use those cookies to impersonate the victim.
+
+In practice, this approach has some significant limitations:
+- The victim must be logged in.
+**- Many applications hide their cookies from JavaScript using the `HttpOnly` flag. This way, cookies are not sent in scripts, as they are included only in HTTP requests.**
+- Sessions might be locked to additional factors like the user's IP address, and not only the cookie value.
+- The session might time out before you're able to hijack it.
+
+Anyways, here is a lab that covers this topic: [xss_cookie_steal](labs/xss_cookie_steal.md)
+
+## Exploiting XSS to capture passwords
+These days, a lot of users have password managers that auto-fill their passwords. We can create a script like a formulary, with a password input, and let browsers autofill this input with the user's password (as the script is in the same domain, the browser thinks that it is a normal password field and autofills the password). This technique avoids the problem with stealing cookies, and allows us to know the password of the user to be able to use it in other platforms. 
+
+The disadvantage is that if the user has 2FA, we can't bypass it as we do it with the cookie steal (as we are inside a **stablished session**). With password usage we have to create a new one.
+
+There is a lab that covers this topic: [xss_password_steal](labs/xss_password_steal.md)
+
+## Exploiting XSS to perform CSRF
+Anything a legitimate user can do on a site, can be done with our malicious script. As we have user's context, as cookies, and also can extract the CSRF tokens as we are inside the domain, we **bypass CSRF** with XSS.
+Some websites, for example, allow changing the user's password without specifying the current password. **In that case, if we get an XSS, we can create a malicious script to change the user's password and then access the user's account with the new password.**
+
+Note to remember: Anti-CSRF strategies do not provide any protection if XSS is also present.
+
+Here is a lab that covers this topic: [xss_csrf](labs/xss_csrf.md)
